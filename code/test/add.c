@@ -8,11 +8,13 @@
 #include "syscall.h"
 
 int main() {
-    int result;
+    int result, i;
 
     result = Add(40, 23);
     //PrintNum(result);
-
+    for(i=0; i<10; i++){
+	 Write("C\n", 2,1);
+     }
     Halt();
     /* not reached */
 }
