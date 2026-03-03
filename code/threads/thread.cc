@@ -21,6 +21,7 @@
 #include "switch.h"
 #include "synch.h"
 #include "sysdep.h"
+#include <stdlib.h>
 
 // this is put at the top of the execution stack, for detecting stack overflows
 const int STACK_FENCEPOST = 0xdedbeef;
@@ -45,6 +46,8 @@ Thread::Thread(char *threadName, bool _has_dynamic_name /*=false*/) {
                                  // of machine registers
     }
     space = NULL;
+    priority = rand()%10;
+    printf("priority: %d, name: %s \n", priority, name);
 }
 
 //----------------------------------------------------------------------
@@ -100,7 +103,10 @@ void Thread::Fork(VoidFunctionPtr func, void *arg) {
 
     oldLevel = interrupt->SetLevel(IntOff);
     scheduler->ReadyToRun(this);  // ReadyToRun assumes that interrupts
-                                  // are disabled!
+                                  // are disab
+    if (this->priority > kernel->currentThread->priority){
+	    kernel->currentThread->Yield();
+    }
     (void)interrupt->SetLevel(oldLevel);
 }
 

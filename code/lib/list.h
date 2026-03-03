@@ -100,6 +100,8 @@ class SortedList : public List<T> {
     void SanityCheck() const;  // has this list been corrupted?
     void SelfTest(T *p, int numEntries);
     // verify module is working
+    // in a sorted list
+    void Append(T item) { Insert(item); }
 
    private:
     int (*compare)(T x, T y);  // function for sorting list elements
@@ -108,7 +110,8 @@ class SortedList : public List<T> {
         Insert(item);
     }                                      // *pre*pending has no meaning
                                            //	in a sorted list
-    void Append(T item) { Insert(item); }  // neither does *ap*pend
+   // void Append(T item) { Insert(item); }  // neither does *ap*pend
+   
 };
 
 // The following class can be used to step through a list.

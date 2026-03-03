@@ -20,5 +20,6 @@ int main() {
     } else{
         Write("Exec failed\n",12,stdout);
     }
-    Halt();
+    Exit(0);
+    //Halt();
 }

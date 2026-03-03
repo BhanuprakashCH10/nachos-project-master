@@ -15,6 +15,7 @@ int main() {
     for(i=0; i<10; i++){
 	 Write("C\n", 2,1);
      }
-    Halt();
+    Exit(0);
+    //Halt();
     /* not reached */
 }
