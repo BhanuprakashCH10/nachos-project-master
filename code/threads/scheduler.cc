@@ -39,7 +39,6 @@ int compare(Thread* x, Thread* y) {
 Scheduler::Scheduler() {
     //readyList = new List<Thread *>;
     readyList = new SortedList<Thread *>(&compare);
-    sleepList = new List<Thread*>();
     toBeDestroyed = NULL;
 }
 
@@ -174,27 +173,3 @@ void Scheduler::Print() {
     readyList->Apply(ThreadPrint);
 }
 
-
-void Scheduler::CheckSleepThread() {
-
-    ASSERT(kernel->interrupt->getLevel() == IntOff);
-
-    List<Thread*> *tmp = new List<Thread*>();
-
-    int now = kernel->stats->totalTicks;
-
-    while (!sleepList->IsEmpty()) {
-
-        Thread* t = sleepList->RemoveFront();
-
-        if (t->waketick <= now) {
-            ReadyToRun(t);
-        }
-        else {
-            tmp->Append(t);
-        }
-    }
-
-    while(!tmp->IsEmpty())
-        sleepList->Append(tmp->RemoveFront());
-}

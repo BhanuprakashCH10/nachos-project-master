@@ -158,7 +158,6 @@ void Interrupt::OneTick() {
                                  // (interrupt handlers run with
                                  // interrupts disabled)
     CheckIfDue(FALSE);           // check for pending interrupts
-    kernel->scheduler->CheckSleepThread();
     ChangeLevel(IntOff, IntOn);  // re-enable interrupts
     if (yieldOnReturn) {         // if the timer device handler asked
                                  // for a context switch, ok to do it now
@@ -197,7 +196,6 @@ void Interrupt::YieldOnReturn() {
 //	more for us to do.
 //----------------------------------------------------------------------
 void Interrupt::Idle() {
-    kernel->scheduler->CheckSleepThread();
     DEBUG(dbgInt, "Machine idling; checking for interrupts.");
     status = IdleMode;
     if (CheckIfDue(TRUE)) {  // check for any pending interrupts
