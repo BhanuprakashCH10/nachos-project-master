@@ -485,8 +485,6 @@ void ExceptionHandler(ExceptionType which) {
 
     		    int result = SysSleep(ticks);
 
-    		    kernel->machine->WriteRegister(2, result);
-
     		    break;
 		}	
                 /**
@@ -520,5 +518,4 @@ void ExceptionHandler(ExceptionType which) {
     kernel->machine->WriteRegister(PrevPCReg, pc);
     kernel->machine->WriteRegister(PCReg, pc + 4);
     kernel->machine->WriteRegister(NextPCReg, pc + 8);
-    ASSERTNOTREACHED();
 }
