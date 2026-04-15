@@ -49,7 +49,7 @@
 #define SC_Signal 53
 #define SC_GetPid 54
 #define SC_Abs 55
-
+#define SC_Sleep 56
 #ifndef IN_ASM
 
 /* The system call interface.  These are the operations the Nachos
@@ -89,6 +89,7 @@ void PrintString(char *buffer);
 
 /* This user program is done (status = 0 means exited normally). */
 void Exit(int status);
+void Sleep(int ticks);
 
 /* A unique identifier for an executing user program (address space) */
 typedef int SpaceId;

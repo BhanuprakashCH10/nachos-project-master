@@ -34,96 +34,28 @@ index c18c317..a0736c3 100644
          int delay = TimerTicks;
  
          if (randomize) {
-diff --git a/code/test/Makefile b/code/test/Makefile
-index f7b5063..5deab5e 100644
---- a/code/test/Makefile
-+++ b/code/test/Makefile
-@@ -112,7 +112,7 @@ ifeq ($(hosttype),unknown)
- PROGRAMS = unknownhost
- else
- # change this if you create a new test program!
--PROGRAMS = add abs halt shell matmult sort segments test_syscall num_io char_io random str_io ascii bubblesort help create_file open_file readwrite exec test_sem sinhvien voinuoc main
-+PROGRAMS = add abs halt shell matmult sort segments test_syscall num_io char_io random str_io ascii bubblesort help create_file open_file readwrite child exec test_sem sinhvien voinuoc main
- endif
- 
- all: $(PROGRAMS)
-@@ -230,6 +230,13 @@ readwrite: readwrite.o start.o
- 	$(LD) $(LDFLAGS) start.o readwrite.o -o readwrite.coff
- 	$(COFF2NOFF) readwrite.coff readwrite
- 
-+child.o: child.c
-+	$(CC) $(CFLAGS) -c child.c
-+
-+child:child.o start.o
-+	$(LD) $(LDFLAGS) start.o child.o -o child.coff
-+	$(COFF2NOFF) child.coff child
-+
- exec.o: exec.c
- 	$(CC) $(CFLAGS) -c exec.c
- exec: exec.o start.o
 diff --git a/code/test/add.c b/code/test/add.c
-index 9bb9aa1..2d016cf 100644
+index e80a2df..2d016cf 100644
 --- a/code/test/add.c
 +++ b/code/test/add.c
-@@ -8,11 +8,14 @@
- #include "syscall.h"
- 
- int main() {
--    int result;
-+    int result, i;
- 
-     result = Add(40, 23);
-     //PrintNum(result);
--
+@@ -15,6 +15,7 @@ int main() {
+     for(i=0; i<10; i++){
+ 	 Write("C\n", 2,1);
+      }
 -    Halt();
-+    for(i=0; i<10; i++){
-+	 Write("C\n", 2,1);
-+     }
 +    Exit(0);
 +    //Halt();
      /* not reached */
  }
-diff --git a/code/test/child.c b/code/test/child.c
-new file mode 100644
-index 0000000..4e5be54
---- /dev/null
-+++ b/code/test/child.c
-@@ -0,0 +1,10 @@
-+#include "syscall.h"
-+
-+int main(){
-+	int i;
-+	for(i =0; i<10; i++){
-+		Write("Child is rinning\n", 17,1);
-+	}
-+
-+	Halt();
-+}
 diff --git a/code/test/exec.c b/code/test/exec.c
-index feadac1..717e866 100644
+index 7e3b46a..717e866 100644
 --- a/code/test/exec.c
 +++ b/code/test/exec.c
-@@ -8,10 +8,18 @@
- 
- int main() {
-     int pid;
--    pid = Exec("num_io");
--    if (pid < 0) {
--        Write("Exec failed: ", 14, stdout);
--        PrintNum(pid);
--    } else
-+    int i;
-+
-+    pid = Exec("../test/add");
-+
-+    for(i=0;i<10;i++){
-+    	Write("P\n", 2,stdout);
-+    }
-+    if (pid>=0) {
-         Join(pid);
-+    } else{
-+        Write("Exec failed\n",12,stdout);
-+    }
+@@ -20,5 +20,6 @@ int main() {
+     } else{
+         Write("Exec failed\n",12,stdout);
+     }
+-    Halt();
 +    Exit(0);
 +    //Halt();
  }
@@ -245,9 +177,8 @@ index 3fbf156..82a27f1 100644
      void FreeSpace() {
          if (space != 0) delete space;
 diff --git a/code/userprog/.syscall.h.swp b/code/userprog/.syscall.h.swp
-new file mode 100644
-index 0000000..a6840e3
-Binary files /dev/null and b/code/userprog/.syscall.h.swp differ
+index c7ae06b..a6840e3 100644
+Binary files a/code/userprog/.syscall.h.swp and b/code/userprog/.syscall.h.swp differ
 diff --git a/pandc.diff b/pandc.diff
 new file mode 100644
 index 0000000..e69de29
