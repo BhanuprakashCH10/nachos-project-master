@@ -437,7 +437,7 @@ void ExceptionHandler(ExceptionType which) {
                     return handle_SC_Halt();
                 case SC_Add:
                     return handle_SC_Add();
-		case SC_Abs:
+                case SC_Abs:
                     return handle_SC_Abs();
                 case SC_ReadNum:
                     return handle_SC_ReadNum();
@@ -479,22 +479,21 @@ void ExceptionHandler(ExceptionType which) {
                     return handle_SC_Signal();
                 case SC_GetPid:
                     return handle_SC_GetPid();
-		case SC_Sleep:
-		{
-    		    int ticks = kernel->machine->ReadRegister(4);
+                case SC_Sleep: {
+                    int ticks = kernel->machine->ReadRegister(4);
 
-    		    int result = SysSleep(ticks);
+                    int result = SysSleep(ticks);
 
-    		    break;
-		}	
-                /**
-                 * Handle all not implemented syscalls
-                 * If you want to write a new handler for syscall:
-                 * - Remove it from this list below
-                 * - Write handle_SC_name()
-                 * - Add new case for SC_name
-                 */
-		case SC_Create:
+                    break;
+                }
+                    /**
+                     * Handle all not implemented syscalls
+                     * If you want to write a new handler for syscall:
+                     * - Remove it from this list below
+                     * - Write handle_SC_name()
+                     * - Add new case for SC_name
+                     */
+                case SC_Create:
                 case SC_Remove:
                 case SC_ThreadFork:
                 case SC_ThreadYield:
@@ -512,7 +511,7 @@ void ExceptionHandler(ExceptionType which) {
             cerr << "Unexpected user mode exception" << (int)which << "\n";
             break;
     }
-    //kernel->machine->AdvancePC();
+    // kernel->machine->AdvancePC();
     int pc = kernel->machine->ReadRegister(PCReg);
 
     kernel->machine->WriteRegister(PrevPCReg, pc);

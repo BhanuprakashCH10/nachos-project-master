@@ -12,14 +12,14 @@ int main() {
 
     pid = Exec("../test/add");
 
-    for(i=0;i<10;i++){
-    	Write("P\n", 2,stdout);
+    for (i = 0; i < 10; i++) {
+        Write("P\n", 2, stdout);
     }
-    if (pid>=0) {
+    if (pid >= 0) {
         Join(pid);
-    } else{
-        Write("Exec failed\n",12,stdout);
+    } else {
+        Write("Exec failed\n", 12, stdout);
     }
     Exit(0);
-    //Halt();
+    // Halt();
 }

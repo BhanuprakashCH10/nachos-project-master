@@ -63,11 +63,11 @@ size_t getpagesize(void);
 int getpagesize(void);
 #endif
 unsigned sleep(unsigned);
-//#ifdef SOLARIS
-// int usleep(useconds_t);
-//#else
-// void usleep(unsigned int);  // rcgood - to avoid spinning processes.
-//#endif
+// #ifdef SOLARIS
+//  int usleep(useconds_t);
+// #else
+//  void usleep(unsigned int);  // rcgood - to avoid spinning processes.
+// #endif
 
 #ifndef NO_MPROT
 
@@ -129,11 +129,11 @@ void Delay(int seconds) { (void)sleep((unsigned)seconds); }
 //----------------------------------------------------------------------
 
 void UDelay(unsigned int useconds) {
-    //#ifdef SOLARIS
-    //   usleep(useconds_t useconds);
-    //#else
-    //   usleep(useconds);
-    //#endif /* SOLARIS */
+    // #ifdef SOLARIS
+    //    usleep(useconds_t useconds);
+    // #else
+    //    usleep(useconds);
+    // #endif /* SOLARIS */
 }
 
 //----------------------------------------------------------------------
@@ -206,7 +206,7 @@ void DeallocBoundedArray(char *ptr, int size) {
 
     mprotect(ptr - pgSize, pgSize, PROT_READ | PROT_WRITE | PROT_EXEC);
     mprotect(ptr + size, pgSize, PROT_READ | PROT_WRITE | PROT_EXEC);
-    delete[](ptr - pgSize);
+    delete[] (ptr - pgSize);
 }
 #endif
 
@@ -452,8 +452,7 @@ void ReadFromSocket(int sockID, char *buffer, int packetSize) {
         perror("in recvfrom");
 #if defined CYGWIN
         cerr << "called with " << packetSize << ", got back " << retVal
-             << ", and "
-             << "\n";
+             << ", and " << "\n";
 #else
         cerr << "called with " << packetSize << ", got back " << retVal
              << ", and " << errno << "\n";

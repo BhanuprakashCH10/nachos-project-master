@@ -11,11 +11,11 @@ int main() {
     int result, i;
 
     result = Add(40, 23);
-    //PrintNum(result);
-    for(i=0; i<10; i++){
-	 Write("C\n", 2,1);
-     }
+    // PrintNum(result);
+    for (i = 0; i < 10; i++) {
+        Write("C\n", 2, 1);
+    }
     Exit(0);
-    //Halt();
+    // Halt();
     /* not reached */
 }

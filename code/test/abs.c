@@ -1,9 +1,8 @@
 #include "syscall.h"
 
 int main() {
-    int x= -10;
+    int x = -10;
     int y;
-    y= Abs(x);
+    y = Abs(x);
     PrintNum(y);
 }
-

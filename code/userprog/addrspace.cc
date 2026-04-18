@@ -115,7 +115,7 @@ AddrSpace::AddrSpace(char *fileName) {
         DEBUG(dbgFile, "\n Error opening file.");
         return;
     }
-    //đọc header của file
+    // đọc header của file
     executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
     if ((noffH.noffMagic != NOFFMAGIC) &&
         (WordToHost(noffH.noffMagic) == NOFFMAGIC))

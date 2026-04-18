@@ -47,7 +47,7 @@ Thread::Thread(char *threadName, bool _has_dynamic_name /*=false*/) {
                                  // of machine registers
     }
     space = NULL;
-    priority = rand()%10;
+    priority = rand() % 10;
     printf("priority: %d, name: %s \n", priority, name);
 }
 
@@ -105,8 +105,8 @@ void Thread::Fork(VoidFunctionPtr func, void *arg) {
     oldLevel = interrupt->SetLevel(IntOff);
     scheduler->ReadyToRun(this);  // ReadyToRun assumes that interrupts
                                   // are disab
-    if (this->priority > kernel->currentThread->priority){
-	    kernel->currentThread->Yield();
+    if (this->priority > kernel->currentThread->priority) {
+        kernel->currentThread->Yield();
     }
     (void)interrupt->SetLevel(oldLevel);
 }

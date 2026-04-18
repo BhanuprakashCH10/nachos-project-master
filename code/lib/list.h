@@ -108,10 +108,9 @@ class SortedList : public List<T> {
 
     void Prepend(T item) {
         Insert(item);
-    }                                      // *pre*pending has no meaning
-                                           //	in a sorted list
-   // void Append(T item) { Insert(item); }  // neither does *ap*pend
-   
+    }  // *pre*pending has no meaning
+       //	in a sorted list
+    // void Append(T item) { Insert(item); }  // neither does *ap*pend
 };
 
 // The following class can be used to step through a list.
