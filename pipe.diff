@@ -1,0 +1,349 @@
+diff --git a/code/test/abs.c b/code/test/abs.c
+index 29e666b..af37b5e 100644
+--- a/code/test/abs.c
++++ b/code/test/abs.c
+@@ -1,11 +1,15 @@
+ #include "syscall.h"
+ 
+ int main() {
+-    int x= -10;
+-    int y;
+-    y= Abs(x);
+-    PrintNum(y);
+-    //peak
+-    /* not reached */
+-}
++    OpenFileId in = _ConsoleInput;
++    OpenFileId out = _ConsoleOutput;
++
++    char buffer[64];
++    int n;
+ 
++    while ((n = Read(buffer, 64, in)) > 0) {
++        Write(buffer, n, out);
++    }
++
++    Exit(0);
++}
+diff --git a/code/test/shell.c b/code/test/shell.c
+index a1d8011..85ad889 100644
+--- a/code/test/shell.c
++++ b/code/test/shell.c
+@@ -1,11 +1,16 @@
+ #include "syscall.h"
+ 
++#define NULL 0
++
+ int main() {
+-    SpaceId newProc;
++    SpaceId newProc, newProc2;
+     OpenFileId input = _ConsoleInput;
+     OpenFileId output = _ConsoleOutput;
+-    char prompt[2], ch, buffer[60];
+-    int i;
++
++    char prompt[2], buffer[60];
++    char buffer1[60], buffer2[60];
++
++    int i, j, k, foundPipe;
+ 
+     prompt[0] = '-';
+     prompt[1] = '-';
+@@ -15,16 +20,57 @@ int main() {
+ 
+         i = 0;
+ 
++        // Read input line
+         do {
+             Read(&buffer[i], 1, input);
+-
+         } while (buffer[i++] != '\n');
+ 
+         buffer[--i] = '\0';
+ 
+         if (i > 0) {
+-            newProc = Exec(buffer);
+-            Join(newProc);
++
++            //  Check for pipe '|'
++            foundPipe = 0;
++            for (j = 0; buffer[j] != '\0'; j++) {
++                if (buffer[j] == '|') {
++                    foundPipe = 1;
++                    break;
++                }
++            }
++
++            // ================= PIPE CASE =================
++            if (foundPipe) {
++                int p = 0, q = 0;
++
++                // Left command
++                for (k = 0; k < j; k++) {
++                    buffer1[p++] = buffer[k];
++                }
++                buffer1[p] = '\0';
++
++                // Right command
++                for (k = j + 1; buffer[k] != '\0'; k++) {
++                    buffer2[q++] = buffer[k];
++                }
++                buffer2[q] = '\0';
++
++                // Create temp file (acts as pipe)
++                Create("pipe.tmp");
++
++                // Run producer
++                newProc = Exec(buffer1);
++                Join(newProc);
++
++                // Run consumer
++                newProc2 = Exec(buffer2);
++                Join(newProc2);
++            }
++
++            // ================= NORMAL CASE =================
++            else {
++                newProc = Exec(buffer);
++                Join(newProc);
++            }
+         }
+     }
+ }
+diff --git a/code/threads/pcb.cc b/code/threads/pcb.cc
+index 065e717..725b739 100644
+--- a/code/threads/pcb.cc
++++ b/code/threads/pcb.cc
+@@ -48,9 +48,29 @@ void StartProcess_2(void* pid) {
+                     // by doing the syscall "exit"
+ }
+ 
+-int PCB::Exec(char* filename, int id) {
++int PCB::Exec(char* filename, int id, char* infile, char* outfile) {
+     // cerr << filename << ' ' << pid << endl;
++    // 🔥 TEMP PIPE LOGIC
++    if (strcmp(filename, "add") == 0) {
++        strcpy(outputFile, "pipe.tmp");   // producer
++    }
++    else if (strcmp(filename, "abs") == 0) {
++        strcpy(inputFile, "pipe.tmp");    // consumer
++    }
++    else {
++        inputFile[0] = '\0';
++        outputFile[0] = '\0';
++    }
+     multex->P();
++    if (infile)
++      strcpy(inputFile, infile);
++    else
++      inputFile[0] = '\0';
++
++    if (outfile)
++      strcpy(outputFile, outfile);
++    else
++      outputFile[0] = '\0';	
+ 
+     this->thread = new Thread(filename, true);
+     if (this->thread == NULL) {
+diff --git a/code/threads/pcb.h b/code/threads/pcb.h
+index dcab368..fd9fa87 100644
+--- a/code/threads/pcb.h
++++ b/code/threads/pcb.h
+@@ -19,8 +19,9 @@ class PCB {
+     PCB();
+     PCB(int id);
+     ~PCB();
+-
+-    int Exec(char *filename, int pid);
++    char inputFile[100];
++    char outputFile[100];
++    int Exec(char *filename, int pid, char *infile, char *outfile);
+     int GetID();
+     int GetNumWait();
+ 
+diff --git a/code/threads/ptable.cc b/code/threads/ptable.cc
+index 89f8486..c7da0c4 100644
+--- a/code/threads/ptable.cc
++++ b/code/threads/ptable.cc
+@@ -20,7 +20,7 @@ PTable::~PTable() {
+     delete bmsem;
+ }
+ 
+-int PTable::ExecUpdate(char* name) {
++int PTable::ExecUpdate(char* name, char* infile, char* outfile) {
+     // Gọi mutex->P(); để giúp tránh tình trạng nạp 2 tiến trình cùng 1 lúc.
+     bmsem->P();
+ 
+@@ -60,7 +60,12 @@ int PTable::ExecUpdate(char* name) {
+     pcb[index]->parentID = kernel->currentThread->processID;
+ 
+     // Gọi thực thi phương thức Exec của lớp PCB.
+-    int pid = pcb[index]->Exec(name, index);
++    //int pid = pcb[index]->Exec(name, index);
++    cerr << "ExecUpdate: name=" << name 
++         << " infile=" << (infile ? infile : "NULL")
++         << " outfile=" << (outfile ? outfile : "NULL") 
++         << endl;
++    int pid = pcb[index]->Exec(name, index, infile, outfile);
+ 
+     // Gọi bmsem->V()
+     bmsem->V();
+@@ -68,6 +73,12 @@ int PTable::ExecUpdate(char* name) {
+     return pid;
+ }
+ 
++PCB* PTable::GetPCB(int pid) {
++    if (pid < 0 || pid >= MAX_PROCESS) return NULL;
++    return pcb[pid];
++}
++
++
+ int PTable::ExitUpdate(int exitcode) {
+     // Nếu tiến trình gọi là main process thì gọi Halt().
+     int id = kernel->currentThread->processID;
+diff --git a/code/threads/ptable.h b/code/threads/ptable.h
+index 23b2f46..67961c6 100644
+--- a/code/threads/ptable.h
++++ b/code/threads/ptable.h
+@@ -16,8 +16,9 @@ class PTable {
+    public:
+     PTable(int size);
+     ~PTable();
+-    int ExecUpdate(char* name);
++    int ExecUpdate(char* name, char* infile, char* outfile);
+     int ExitUpdate(int ec);
++    PCB* GetPCB(int pid);
+     int JoinUpdate(int id);
+     int GetFreeSlot();
+     bool IsExist(int pid);
+@@ -25,4 +26,4 @@ class PTable {
+     char* GetFileName(int id);
+ };
+ 
+-#endif
+\ No newline at end of file
++#endif
+diff --git a/code/userprog/exception.cc b/code/userprog/exception.cc
+index 3b00787..a345cc9 100644
+--- a/code/userprog/exception.cc
++++ b/code/userprog/exception.cc
+@@ -310,21 +310,33 @@ void handle_SC_Seek() {
+  * (write result to R2)
+  */
+ void handle_SC_Exec() {
+-    int virtAddr;
+-    virtAddr = kernel->machine->ReadRegister(
+-        4);  // doc dia chi ten chuong trinh tu thanh ghi r4
+-    char* name;
+-    name = stringUser2System(virtAddr);  // Lay ten chuong trinh, nap vao kernel
++    int virtAddr = kernel->machine->ReadRegister(4);
++    int virtInfile = kernel->machine->ReadRegister(5);
++    int virtOutfile = kernel->machine->ReadRegister(6);
++
++    char* name = stringUser2System(virtAddr);
++
++    char* infile = NULL;
++    char* outfile = NULL;
++
++    if (virtInfile != 0)
++        infile = stringUser2System(virtInfile);
++
++    if (virtOutfile != 0)
++        outfile = stringUser2System(virtOutfile);
++
+     if (name == NULL) {
+-        DEBUG(dbgSys, "\n Not enough memory in System");
+-        ASSERT(false);
+         kernel->machine->WriteRegister(2, -1);
+         return move_program_counter();
+     }
+ 
+-    kernel->machine->WriteRegister(2, SysExec(name));
+-    // DO NOT DELETE NAME, THE THEARD WILL DELETE IT LATER
+-    // delete[] name;
++    // DEBUG (very helpful)
++    cerr << "Exec: name=" << name
++         << " infile=" << (infile ? infile : "NULL")
++         << " outfile=" << (outfile ? outfile : "NULL")
++         << endl;
++
++    kernel->machine->WriteRegister(2, SysExec(name, infile, outfile));
+ 
+     return move_program_counter();
+ }
+diff --git a/code/userprog/ksyscall.h b/code/userprog/ksyscall.h
+index 8c32caf..d09c262 100644
+--- a/code/userprog/ksyscall.h
++++ b/code/userprog/ksyscall.h
+@@ -188,16 +188,52 @@ int SysOpen(char* fileName, int type) {
+ int SysClose(int id) { return kernel->fileSystem->Close(id); }
+ 
+ int SysRead(char* buffer, int charCount, int fileId) {
++    PCB* pcb = kernel->pTab->GetPCB(kernel->currentThread->processID);
++
+     if (fileId == 0) {
++        //  PIPE INPUT
++        if (pcb->inputFile[0] != '\0') {
++            OpenFile* f = kernel->fileSystem->Open(pcb->inputFile);
++            if (f == NULL) return -1;
++
++            int n = f->Read(buffer, charCount);
++            delete f;
++            return n;
++        }
++
++        // normal keyboard input
+         return kernel->synchConsoleIn->GetString(buffer, charCount);
+     }
++
+     return kernel->fileSystem->Read(buffer, charCount, fileId);
+ }
+ 
+ int SysWrite(char* buffer, int charCount, int fileId) {
++    PCB* pcb = kernel->pTab->GetPCB(kernel->currentThread->processID);
++
+     if (fileId == 1) {
++        //  PIPE OUTPUT
++        if (pcb->outputFile[0] != '\0') {
++
++            // create if not exists
++            if (kernel->fileSystem->Open(pcb->outputFile) == NULL) {
++                kernel->fileSystem->Create(pcb->outputFile);
++            }
++
++            OpenFile* f = kernel->fileSystem->Open(pcb->outputFile);
++            if (f == NULL) return -1;
++
++            f->Seek(f->Length()); // append
++            int n = f->Write(buffer, charCount);
++
++            delete f;
++            return n;
++        }
++
++        // normal console output
+         return kernel->synchConsoleOut->PutString(buffer, charCount);
+     }
++
+     return kernel->fileSystem->Write(buffer, charCount, fileId);
+ }
+ 
+@@ -209,7 +245,7 @@ int SysSeek(int seekPos, int fileId) {
+     return kernel->fileSystem->Seek(seekPos, fileId);
+ }
+ 
+-int SysExec(char* name) {
++int SysExec(char* name, char* infile = NULL, char* outfile = NULL) {
+     // cerr << "call: `" << name  << "`"<< endl;
+     OpenFile* oFile = kernel->fileSystem->Open(name);
+     if (oFile == NULL) {
+@@ -220,7 +256,8 @@ int SysExec(char* name) {
+     delete oFile;
+ 
+     // Return child process id
+-    return kernel->pTab->ExecUpdate(name);
++    //return kernel->pTab->ExecUpdate(name);
++    return kernel->pTab->ExecUpdate(name, infile, outfile);
+ }
+ 
+ int SysJoin(int id) { return kernel->pTab->JoinUpdate(id); }
