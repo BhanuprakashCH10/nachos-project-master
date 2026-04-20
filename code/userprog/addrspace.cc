@@ -102,7 +102,8 @@ AddrSpace::~AddrSpace() {
 //----------------------------------------------------------------------
 
 AddrSpace::AddrSpace(char *fileName) {
-    OpenFile *executable = kernel->fileSystem->Open(fileName);
+    executable = kernel->fileSystem->Open(fileName);
+    curr_page_i = 0;
     NoffHeader noffH;
     unsigned int i, size, j, offset;
     unsigned int numCodePage,
@@ -150,7 +151,8 @@ AddrSpace::AddrSpace(char *fileName) {
         pageTable[i].virtualPage = i;  // for now, virtual page # = phys page #
         pageTable[i].physicalPage = kernel->gPhysPageBitMap->FindAndSet();
         // cerr << pageTable[i].physicalPage << endl;
-        pageTable[i].valid = TRUE;
+        pageTable[i].valid = FALSE;
+	cout << pageTable[i].physicalPage << endl;
         pageTable[i].use = FALSE;
         pageTable[i].dirty = FALSE;
         pageTable[i].readOnly = FALSE;  // if the code segment was entirely on

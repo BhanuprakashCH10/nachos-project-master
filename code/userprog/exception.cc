@@ -176,6 +176,20 @@ void handle_SC_ReadNum() {
     return move_program_counter();
 }
 
+void handle_PageFault(){
+    int i;
+    i = kernel->addrspace->curr_page_i;
+
+    cout << i << endl;  // debug
+
+    kernel->addrspace->pageTable[i].valid = TRUE;
+
+    i++;
+    kernel->addrspace->curr_page_i = i;
+
+    return;
+}
+
 void handle_SC_PrintNum() {
     int character = kernel->machine->ReadRegister(4);
     SysPrintNum(character);
@@ -432,7 +446,12 @@ void ExceptionHandler(ExceptionType which) {
             kernel->interrupt->setStatus(SystemMode);
             DEBUG(dbgSys, "Switch to system mode\n");
             break;
-        case PageFaultException:
+        //case PageFaultException:
+	case PageFaultException: {
+    		cerr << "page fault exception";
+    		handle_PageFault();
+    		return;
+	}
         case ReadOnlyException:
         case BusErrorException:
         case AddressErrorException:
