@@ -48,9 +48,29 @@ void StartProcess_2(void* pid) {
                     // by doing the syscall "exit"
 }
 
-int PCB::Exec(char* filename, int id) {
+int PCB::Exec(char* filename, int id, char* infile, char* outfile) {
     // cerr << filename << ' ' << pid << endl;
+    // 🔥 TEMP PIPE LOGIC
+    if (strcmp(filename, "add") == 0) {
+        strcpy(outputFile, "pipe.tmp");   // producer
+    }
+    else if (strcmp(filename, "abs") == 0) {
+        strcpy(inputFile, "pipe.tmp");    // consumer
+    }
+    else {
+        inputFile[0] = '\0';
+        outputFile[0] = '\0';
+    }
     multex->P();
+    if (infile)
+      strcpy(inputFile, infile);
+    else
+      inputFile[0] = '\0';
+
+    if (outfile)
+      strcpy(outputFile, outfile);
+    else
+      outputFile[0] = '\0';	
 
     this->thread = new Thread(filename, true);
     if (this->thread == NULL) {

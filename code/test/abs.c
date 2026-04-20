@@ -1,11 +1,15 @@
 #include "syscall.h"
 
 int main() {
-    int x= -10;
-    int y;
-    y= Abs(x);
-    PrintNum(y);
-    //peak
-    /* not reached */
-}
+    OpenFileId in = _ConsoleInput;
+    OpenFileId out = _ConsoleOutput;
 
+    char buffer[64];
+    int n;
+
+    while ((n = Read(buffer, 64, in)) > 0) {
+        Write(buffer, n, out);
+    }
+
+    Exit(0);
+}

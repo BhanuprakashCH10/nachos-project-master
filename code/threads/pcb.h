@@ -19,8 +19,9 @@ class PCB {
     PCB();
     PCB(int id);
     ~PCB();
-
-    int Exec(char *filename, int pid);
+    char inputFile[100];
+    char outputFile[100];
+    int Exec(char *filename, int pid, char *infile, char *outfile);
     int GetID();
     int GetNumWait();
 

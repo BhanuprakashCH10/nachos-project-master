@@ -310,21 +310,33 @@ void handle_SC_Seek() {
  * (write result to R2)
  */
 void handle_SC_Exec() {
-    int virtAddr;
-    virtAddr = kernel->machine->ReadRegister(
-        4);  // doc dia chi ten chuong trinh tu thanh ghi r4
-    char* name;
-    name = stringUser2System(virtAddr);  // Lay ten chuong trinh, nap vao kernel
+    int virtAddr = kernel->machine->ReadRegister(4);
+    int virtInfile = kernel->machine->ReadRegister(5);
+    int virtOutfile = kernel->machine->ReadRegister(6);
+
+    char* name = stringUser2System(virtAddr);
+
+    char* infile = NULL;
+    char* outfile = NULL;
+
+    if (virtInfile != 0)
+        infile = stringUser2System(virtInfile);
+
+    if (virtOutfile != 0)
+        outfile = stringUser2System(virtOutfile);
+
     if (name == NULL) {
-        DEBUG(dbgSys, "\n Not enough memory in System");
-        ASSERT(false);
         kernel->machine->WriteRegister(2, -1);
         return move_program_counter();
     }
 
-    kernel->machine->WriteRegister(2, SysExec(name));
-    // DO NOT DELETE NAME, THE THEARD WILL DELETE IT LATER
-    // delete[] name;
+    // DEBUG (very helpful)
+    cerr << "Exec: name=" << name
+         << " infile=" << (infile ? infile : "NULL")
+         << " outfile=" << (outfile ? outfile : "NULL")
+         << endl;
+
+    kernel->machine->WriteRegister(2, SysExec(name, infile, outfile));
 
     return move_program_counter();
 }

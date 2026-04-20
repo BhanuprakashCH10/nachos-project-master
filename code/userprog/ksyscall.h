@@ -188,16 +188,52 @@ int SysOpen(char* fileName, int type) {
 int SysClose(int id) { return kernel->fileSystem->Close(id); }
 
 int SysRead(char* buffer, int charCount, int fileId) {
+    PCB* pcb = kernel->pTab->GetPCB(kernel->currentThread->processID);
+
     if (fileId == 0) {
+        //  PIPE INPUT
+        if (pcb->inputFile[0] != '\0') {
+            OpenFile* f = kernel->fileSystem->Open(pcb->inputFile);
+            if (f == NULL) return -1;
+
+            int n = f->Read(buffer, charCount);
+            delete f;
+            return n;
+        }
+
+        // normal keyboard input
         return kernel->synchConsoleIn->GetString(buffer, charCount);
     }
+
     return kernel->fileSystem->Read(buffer, charCount, fileId);
 }
 
 int SysWrite(char* buffer, int charCount, int fileId) {
+    PCB* pcb = kernel->pTab->GetPCB(kernel->currentThread->processID);
+
     if (fileId == 1) {
+        //  PIPE OUTPUT
+        if (pcb->outputFile[0] != '\0') {
+
+            // create if not exists
+            if (kernel->fileSystem->Open(pcb->outputFile) == NULL) {
+                kernel->fileSystem->Create(pcb->outputFile);
+            }
+
+            OpenFile* f = kernel->fileSystem->Open(pcb->outputFile);
+            if (f == NULL) return -1;
+
+            f->Seek(f->Length()); // append
+            int n = f->Write(buffer, charCount);
+
+            delete f;
+            return n;
+        }
+
+        // normal console output
         return kernel->synchConsoleOut->PutString(buffer, charCount);
     }
+
     return kernel->fileSystem->Write(buffer, charCount, fileId);
 }
 
@@ -209,7 +245,7 @@ int SysSeek(int seekPos, int fileId) {
     return kernel->fileSystem->Seek(seekPos, fileId);
 }
 
-int SysExec(char* name) {
+int SysExec(char* name, char* infile = NULL, char* outfile = NULL) {
     // cerr << "call: `" << name  << "`"<< endl;
     OpenFile* oFile = kernel->fileSystem->Open(name);
     if (oFile == NULL) {
@@ -220,7 +256,8 @@ int SysExec(char* name) {
     delete oFile;
 
     // Return child process id
-    return kernel->pTab->ExecUpdate(name);
+    //return kernel->pTab->ExecUpdate(name);
+    return kernel->pTab->ExecUpdate(name, infile, outfile);
 }
 
 int SysJoin(int id) { return kernel->pTab->JoinUpdate(id); }
