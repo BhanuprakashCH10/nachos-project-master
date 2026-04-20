@@ -5,6 +5,7 @@ int main() {
     int y;
     y= Abs(x);
     PrintNum(y);
+    //peak
     /* not reached */
 }
 
